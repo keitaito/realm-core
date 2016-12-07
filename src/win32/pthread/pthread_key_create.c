@@ -37,6 +37,9 @@
 #include "pthread.h"
 #include "implement.h"
 
+#include <Windows.h>
+#include <fibersapi.h>
+
 
 /* TLS_OUT_OF_INDEXES not defined on WinCE */
 #if !defined(TLS_OUT_OF_INDEXES)
@@ -82,7 +85,7 @@ pthread_key_create (pthread_key_t * key, void (PTW32_CDECL *destructor) (void *)
     {
       result = ENOMEM;
     }
-  else if ((newkey->key = TlsAlloc ()) == TLS_OUT_OF_INDEXES)
+  else if ((newkey->key = FlsAlloc ()) == TLS_OUT_OF_INDEXES)
     {
       result = EAGAIN;
 

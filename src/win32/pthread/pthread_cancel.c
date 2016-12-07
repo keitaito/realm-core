@@ -67,7 +67,7 @@ ptw32_RegisterCancelation (PAPCFUNC unused1, HANDLE threadH, DWORD unused2)
   context.ContextFlags = CONTEXT_CONTROL;
   GetThreadContext (threadH, &context);
   PTW32_PROGCTR (context) = (DWORD_PTR) ptw32_cancel_self;
-  SetThreadContext (threadH, &context);
+//  SetThreadContext (threadH, &context);
   return 0;
 }
 

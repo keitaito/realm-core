@@ -379,7 +379,7 @@ util::Optional<std::string> case_map(StringData source, bool upper)
     std::string result;
     result.resize(source.size());
 
-#ifdef _WIN32
+#if 0
     const char* begin = source.data();
     const char* end = begin + source.size();
     auto output = result.begin();

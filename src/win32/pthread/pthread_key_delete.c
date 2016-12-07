@@ -107,7 +107,7 @@ pthread_key_delete (pthread_key_t key)
 	    }
 	}
 
-      TlsFree (key->key);
+      FlsFree (key->key);
       if (key->destructor != NULL)
 	{
 	  /* A thread could be holding the keyLock */
