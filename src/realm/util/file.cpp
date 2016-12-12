@@ -771,7 +771,14 @@ void File::unlock() noexcept
 
     if (!m_have_lock)
         return;
-    BOOL r = UnlockFileEx(m_handle, 0, 1, 0, 0);
+
+	OVERLAPPED overlapped;
+	overlapped.hEvent = 0;
+	overlapped.OffsetHigh = 0;
+	overlapped.Offset = 0;
+	overlapped.Pointer = 0;
+    BOOL r = UnlockFileEx(m_handle, 0, 1, 0, &overlapped);
+
     REALM_ASSERT_RELEASE(r);
     m_have_lock = false;
 
