@@ -88,7 +88,8 @@ private:
 #endif
 };
 
-
+std::error_code make_error_code(SimulatedFailure::FailureType) noexcept;
+    
 class SimulatedFailure::OneShotPrimeGuard {
 public:
     OneShotPrimeGuard(FailureType);
