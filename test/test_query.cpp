@@ -558,23 +558,23 @@ TEST(Query_NextGen_StringConditions)
 
     m = table1->column<String>(0).ends_with(table1->column<String>(1), true).find();
     CHECK_EQUAL(m, 2);
-    
+
     // Like (wildcard matching)
     m = table1->column<String>(0).like("b*", true).find();
     CHECK_EQUAL(m, 2);
-    
+
     m = table1->column<String>(0).like("b*", false).find();
     CHECK_EQUAL(m, 2);
-    
+
     m = table1->column<String>(0).like("*r", false).find();
     CHECK_EQUAL(m, 2);
-    
+
     m = table1->column<String>(0).like("f?o", false).find();
     CHECK_EQUAL(m, 0);
-    
+
     m = (table1->column<String>(0).like("f*", false) && table1->column<String>(0) == "foo").find();
     CHECK_EQUAL(m, 0);
-    
+
     m = table1->column<String>(0).like(table1->column<String>(1), true).find();
     CHECK_EQUAL(m, not_found);
 
@@ -617,7 +617,7 @@ TEST(Query_NextGen_StringConditions)
 
     m = table2->column<String>(0).contains(StringData(""), false).count();
     CHECK_EQUAL(m, 4);
-    
+
     m = table2->column<String>(0).like(StringData(""), false).count();
     CHECK_EQUAL(m, 1);
 
@@ -641,7 +641,7 @@ TEST(Query_NextGen_StringConditions)
 
     m = table2->column<String>(0).contains(realm::null(), false).count();
     CHECK_EQUAL(m, 4);
-    
+
     m = table2->column<String>(0).like(realm::null(), false).count();
     CHECK_EQUAL(m, 1);
 
@@ -683,7 +683,7 @@ TEST(Query_NextGen_StringConditions)
 
     m = table3->link(0).column<String>(0).contains(StringData(""), false).count();
     CHECK_EQUAL(m, 4);
-    
+
     m = table3->link(0).column<String>(0).like(StringData(""), false).count();
     CHECK_EQUAL(m, 1);
 
@@ -707,6 +707,16 @@ TEST(Query_NextGen_StringConditions)
 
     m = table3->link(0).column<String>(0).contains(realm::null(), false).count();
     CHECK_EQUAL(m, 4);
+    
+    // Test long string contains search (where needle is longer than 255 chars)
+    table2->add_empty_row();
+    table2->set_string(0, 0, "This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, needle, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!");
+    
+    m = table2->column<String>(0).contains("This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, needle", false).count();
+    CHECK_EQUAL(m, 1);
+    
+    m = table2->column<String>(0).contains("This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, This is a long search string that does not contain the word being searched for!, needle", true).count();
+    CHECK_EQUAL(m, 1);
     
     m = table3->link(0).column<String>(0).like(realm::null(), false).count();
     CHECK_EQUAL(m, 1);
@@ -5069,7 +5079,7 @@ TEST(Query_FindAllContains)
 TEST(Query_FindAllLike)
 {
     TupleTableType ttt;
-    
+
     ttt.add(0, "foo");
     ttt.add(0, "foobar");
     ttt.add(0, "barfoo");
@@ -5077,7 +5087,7 @@ TEST(Query_FindAllLike)
     ttt.add(0, "fo");
     ttt.add(0, "fobar");
     ttt.add(0, "barfo");
-    
+
     TupleTableType::Query q1 = ttt.where().second.like("*foo*");
     TupleTableType::View tv1 = q1.find_all();
     CHECK_EQUAL(4, tv1.size());
@@ -5103,7 +5113,7 @@ TEST(Query_FindAllLikeStackOverflow)
 TEST(Query_FindAllLikeCaseInsensitive)
 {
     TupleTableType ttt;
-    
+
     ttt.add(0, "Foo");
     ttt.add(0, "FOOBAR");
     ttt.add(0, "BaRfOo");
@@ -5111,7 +5121,7 @@ TEST(Query_FindAllLikeCaseInsensitive)
     ttt.add(0, "Fo");
     ttt.add(0, "Fobar");
     ttt.add(0, "baRFo");
-    
+
     TupleTableType::Query q1 = ttt.where().second.like("*foo*", false);
     TupleTableType::View tv1 = q1.find_all();
     CHECK_EQUAL(4, tv1.size());
@@ -5246,7 +5256,7 @@ TEST(Query_CaseSensitivity)
 
 #if (defined(_WIN32) || defined(__WIN32__) || defined(_WIN64))
 
-TEST(Query_Unicode2)
+ONLY(Query_Unicode2)
 {
     TupleTableType ttt;
 
@@ -9815,7 +9825,46 @@ TEST(Query_TableInitialization)
         test(helper.table->column<LinkList>(col_list, q.equal_int(col_int, 0)).count() > 0);
     });
 }
+/*
 
+// These tests fail on Windows due to lack of tolerance for invalid UTF-8 in the case mapping methods
+ 
+TEST(Query_UTF8_Contains)
+{
+    Group group;
+    TableRef table1 = group.add_table("table1");
+    table1->add_column(type_String, "str1");
+    table1->add_empty_row();
+    table1->set_string(0, 0, StringData("\x0ff\x000", 2));
+    size_t m = table1->column<String>(0).contains(StringData("\x0ff\x000", 2), false).count();
+    CHECK_EQUAL(1, m);
+}
+
+
+TEST(Query_UTF8_Contains_Fuzzy)
+{
+    Table table;
+    table.add_column(type_String, "str1");
+    table.add_empty_row();
+
+    for (size_t t = 0; t < 10000; t++) {
+        char haystack[10];
+        char needle[7];
+
+        for (size_t c = 0; c < 10; c++)
+            haystack[c] = char(fastrand());
+
+        for (size_t c = 0; c < 7; c++)
+            needle[c] = char(fastrand());
+
+        table.set_string(0, 0, StringData(haystack, 10));
+
+        table.column<String>(0).contains(StringData(needle, fastrand(7)), false).count();
+        table.column<String>(0).contains(StringData(needle, fastrand(7)), true).count();
+    }
+}
+*/
+        
 TEST(Query_ArrayLeafRelocate) 
 {
     for (size_t iter = 0; iter < 10; iter++) {
@@ -9856,8 +9905,7 @@ TEST(Query_ArrayLeafRelocate)
             LinkViewRef lv = contact.get()->get_linklist(1, contact.get()->size() - 1);
             lv->add(contact_type.get()->size() - 1);
 
-            if (t == 0 || t == REALM_MAX_BPNODE_SIZE)
-            {
+            if (t == 0 || t == REALM_MAX_BPNODE_SIZE) {
                 tv.sync_if_needed();
                 tv2.sync_if_needed();
                 tv3.sync_if_needed();
@@ -9867,6 +9915,5 @@ TEST(Query_ArrayLeafRelocate)
         }
     }
 }
-
 
 #endif // TEST_QUERY

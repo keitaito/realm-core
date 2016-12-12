@@ -90,7 +90,7 @@ size_t GroupWriter::MapWindow::get_window_size(util::File& f, ref_type start_ref
     if (window_size < intended_alignment)
         window_size = intended_alignment;
     // but never map beyond end of file
-    size_t file_size = f.get_size();
+    size_t file_size = to_size_t(f.get_size());
     REALM_ASSERT_DEBUG_EX(start_ref + size <= file_size, start_ref + size, file_size);
     if (window_size > file_size - base_ref)
         window_size = file_size - base_ref;
@@ -237,7 +237,7 @@ GroupWriter::~GroupWriter()
 
 size_t GroupWriter::get_file_size() const noexcept
 {
-    return m_alloc.get_file().get_size();
+    return to_size_t(m_alloc.get_file().get_size());
 }
 
 void GroupWriter::sync_all_mappings()
@@ -482,6 +482,16 @@ ref_type GroupWriter::write_group()
     return top_ref;
 }
 
+size_t GroupWriter::get_free_space() {
+    if (m_free_lengths.is_attached()) {
+        size_t sum = 0;
+        for (size_t j=0; j<m_free_lengths.size(); ++j)
+            sum += m_free_lengths.get(j);
+        return sum;
+    } else {
+        return 0;
+    }
+}
 
 void GroupWriter::merge_free_space()
 {
@@ -585,7 +595,7 @@ std::pair<size_t, size_t> GroupWriter::search_free_space_in_part_of_freelist(siz
 {
     bool is_shared = m_group.m_is_shared;
     SlabAlloc& alloc = m_group.m_alloc;
-    for (size_t next_start = begin; next_start < end; ) {
+    for (size_t next_start = begin; next_start < end;) {
         size_t i = m_free_lengths.find_first<Greater>(size - 1, next_start);
         if (i == not_found) {
             break;

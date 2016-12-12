@@ -2,15 +2,24 @@
 
 ### Bugfixes
 
-* Lorem ipsum.
+* Fixed a race between destruction of a global mutex as part of main thread exit
+  and attempt to lock it on a background thread, or conversely attempt to lock a
+  mutex after it has been destroyed. (PR #2238, fixes issues #2238, #2137, #2009)
 
 ### Breaking changes
 
-* Lorem ipsum.
+* Attempts to open a Realm file with a different history type (Mobile Platform vs
+  Mobile Database) now throws an IncompatibleHistories exception instead of a
+  InvalidDatabase (as requested in issue #2275).
 
 ### Enhancements
 
-* Lorem ipsum.
+* Added 'void SharedGroup::get_stats(size_t& free_space, size_t& used_space)'
+  allowing access to the size of free and used space (Requested in issue #2281).
+* Optimized Contains queries to use Boyer-Moore algorithm (around 10x speedup on large datasets)
+* Parameter arguments passed to logger methods (e.g., `util::Logger::info()`)
+  are now perfectly forwarded (via perfect forwarding) to
+  `std::stream::operator<<()`.
 
 -----------
 

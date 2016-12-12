@@ -28,7 +28,6 @@
 #include <cstdlib>
 
 #ifdef _WIN32
-#define NOMINMAX
 #include <windows.h>
 #include <io.h>
 #include <direct.h>
@@ -1018,7 +1017,7 @@ void File::copy(const std::string& origin_path, const std::string& target_path)
     std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffer_size); // Throws
     for (;;) {
         size_t n = origin_file.read(buffer.get(), buffer_size); // Throws
-        target_file.write(buffer.get(), n); // Throws
+        target_file.write(buffer.get(), n);                     // Throws
         if (n < buffer_size)
             break;
     }

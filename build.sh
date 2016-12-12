@@ -20,15 +20,6 @@ cd "$dir" || exit 1
 REALM_HOME="$(pwd)" || exit 1
 export REALM_HOME
 
-# Install pre-push hook to prevent pushing to the wrong remote
-PRE_PUSH_HOOK_SOURCE='tools/pre-push'
-PRE_PUSH_HOOK_DESTINATION='.git/hooks/pre-push'
-if ! [ -x "$PRE_PUSH_HOOK_DESTINATION" ] || ! diff "$PRE_PUSH_HOOK_DESTINATION" "$PRE_PUSH_HOOK_SOURCE" >/dev/null; then
-    echo >&2 'Installing pre-push hook to prevent pushing to the wrong remote'
-    cp "$PRE_PUSH_HOOK_SOURCE" "$PRE_PUSH_HOOK_DESTINATION"
-    chmod +x "$PRE_PUSH_HOOK_DESTINATION"
-fi
-
 # Set mode to first argument and shift the argument array
 MODE="$1"
 [ $# -gt 0 ] && shift
@@ -3050,7 +3041,7 @@ EOF
         # Run by Jenkins. Relies on the WORKSPACE environment variable provided by Jenkins itself
         REALM_ENABLE_ALLOC_SET_ZERO=1 sh build.sh config || exit 1
         sh build.sh clean || exit 1
-        VALGRIND_FLAGS="--tool=memcheck --leak-check=full --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --xml=yes --xml-file=${WORKSPACE}/realm-tests-dbg.%p.memreport" sh build.sh memcheck || exit 1
+        VALGRIND_FLAGS="--tool=memcheck --leak-check=full --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --xml=yes --suppressions=${WORKSPACE}/test/valgrind.suppress --xml-file=${WORKSPACE}/realm-tests-dbg.%p.memreport" sh build.sh memcheck || exit 1
         exit 0
         ;;
 

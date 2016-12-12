@@ -42,7 +42,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 #else
-#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -758,7 +757,7 @@ void SharedGroup::do_open(const std::string& path, bool no_create_file, bool is_
             // uninitialized bits to the file.
             alignas(SharedInfo) char buffer[sizeof(SharedInfo)] = {0};
             new (buffer) SharedInfo{options.durability, history_type}; // Throws
-            m_file.write(buffer, sizeof buffer); // Throws
+            m_file.write(buffer, sizeof buffer);                       // Throws
 
             // Mark the file as completely initialized via a memory
             // mapping. Since this is done as a separate final step (involving
@@ -952,18 +951,22 @@ void SharedGroup::do_open(const std::string& path, bool no_create_file, bool is_
                     case Replication::hist_None:
                     case Replication::hist_OutOfRealm:
                         good_history_type = (stored_history_type == Replication::hist_None);
+                        if (!good_history_type)
+                            throw IncompatibleHistories("Expected a Realm without history", path);
                         break;
                     case Replication::hist_InRealm:
                         good_history_type = (stored_history_type == Replication::hist_InRealm ||
                                              stored_history_type == Replication::hist_None);
+                        if (!good_history_type)
+                            throw IncompatibleHistories("Expected a Realm with no or in-realm history", path);
                         break;
                     case Replication::hist_Sync:
                         good_history_type = ((stored_history_type == Replication::hist_Sync) ||
                                              (stored_history_type == Replication::hist_None && top_ref == 0));
+                        if (!good_history_type)
+                            throw IncompatibleHistories(
+                                "Expected an empty Realm or a Realm written by Realm Mobile Platform", path);
                 }
-                if (!good_history_type)
-                    throw InvalidDatabase("Bad or incompatible history type", path);
-
                 if (Replication* repl = gf::get_replication(m_group))
                     repl->initiate_session(version); // Throws
 
@@ -1367,7 +1370,6 @@ void SharedGroup::do_async_commits()
 #endif
             GroupWriter writer(m_group);
             writer.commit(next_read_lock.m_top_ref);
-
 #ifdef REALM_ENABLE_LOGFILE
             std::cerr << "..and Done" << std::endl;
 #endif
@@ -1432,15 +1434,7 @@ void SharedGroup::upgrade_file_format(bool allow_file_format_upgrade, int target
 // a simple thread barrier that makes sure the threads meet here, to
 // increase the likelyhood of detecting any potential race problems.
 // See the unit test for details.
-#ifdef _WIN32
-        _sleep(200);
-#else
-        // sleep() takes seconds and usleep() is deprecated, so use nanosleep()
-        timespec ts;
-        ts.tv_sec = 0;
-        ts.tv_nsec = 200000000;
-        nanosleep(&ts, 0);
-#endif
+        millisleep(200);
 #endif
 
         WriteTransaction wt(*this);
@@ -1568,7 +1562,9 @@ const Group& SharedGroup::begin_read(VersionID version_id)
     return m_group;
 }
 
-
+#ifdef _MSC_VER
+#pragma warning (disable: 4297) // throw in noexcept
+#endif
 void SharedGroup::end_read() noexcept
 {
     if (m_transact_stage == transact_Ready)
@@ -1581,6 +1577,9 @@ void SharedGroup::end_read() noexcept
 
     m_transact_stage = transact_Ready;
 }
+#ifdef _MSC_VER
+#pragma warning (default: 4297)
+#endif
 
 
 Group& SharedGroup::begin_write()
@@ -1628,12 +1627,16 @@ SharedGroup::version_type SharedGroup::commit()
     return new_version;
 }
 
-
+#ifdef _MSC_VER
+#pragma warning (disable: 4297) // throw in noexcept
+#endif
 void SharedGroup::rollback() noexcept
 {
     if (m_transact_stage == transact_Ready)
         return; // Idempotency
 
+    // FIXME: Find common/better method for error handling (throw from noexcept, and 
+    // pin_version() asserts instead).
     if (m_transact_stage != transact_Writing)
         throw LogicError(LogicError::wrong_transact_state);
 
@@ -1645,6 +1648,9 @@ void SharedGroup::rollback() noexcept
 
     m_transact_stage = transact_Ready;
 }
+#ifdef _MSC_VER
+#pragma warning (default: 4297)
+#endif
 
 SharedGroup::VersionID SharedGroup::pin_version()
 {
@@ -1880,6 +1886,8 @@ void SharedGroup::low_level_commit(uint_fast64_t new_version)
     out.set_versions(new_version, oldest_version);
     // Recursively write all changed arrays to end of file
     ref_type new_top_ref = out.write_group(); // Throws
+    m_free_space = out.get_free_space();
+    m_used_space = out.get_file_size() - m_free_space;
     // std::cout << "Writing version " << new_version << ", Topptr " << new_top_ref
     //     << " Read lock at version " << oldest_version << std::endl;
     switch (Durability(info->durability)) {

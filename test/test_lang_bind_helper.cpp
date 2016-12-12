@@ -41,7 +41,6 @@
 #include <sys/wait.h>
 #define ENABLE_ROBUST_AGAINST_DEATH_DURING_WRITE
 #else
-#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -11203,8 +11202,7 @@ TEST(LangBindHelper_VersionControl)
         MyTable::ConstRef t = g.get_table<MyTable>("test");
         CHECK_EQUAL(old_version, t[old_version].first);
         for (int k = num_random_tests; k; --k) {
-            int new_version =
-                random.draw_int_mod(num_versions);
+            int new_version = random.draw_int_mod(num_versions);
             // std::cerr << "Random jump: version " << old_version << " -> " << new_version << std::endl;
             if (new_version < old_version) {
                 CHECK(versions[new_version] < versions[old_version]);
@@ -12137,7 +12135,7 @@ TEST(LangBindHelper_InRealmHistory_Downgrade)
     }
     {
         // No history
-        CHECK_THROW(SharedGroup(path), InvalidDatabase);
+        CHECK_THROW(SharedGroup(path), IncompatibleHistories);
     }
 }
 
