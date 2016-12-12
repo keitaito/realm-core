@@ -1051,9 +1051,10 @@ bool File::is_same_file(const File& f) const
     REALM_ASSERT_RELEASE(is_attached());
     REALM_ASSERT_RELEASE(f.is_attached());
 
-#ifdef _WIN32 // Windows version
-	/*
-
+#if REALM_UWP
+	static_cast<void>(f);
+	throw std::runtime_error("Not yet supported");
+#elif _WIN32 // Windows version
     // FIXME: This version does not work on ReFS.
     BY_HANDLE_FILE_INFORMATION file_info;
     if (GetFileInformationByHandle(m_handle, &file_info)) {
@@ -1065,25 +1066,6 @@ bool File::is_same_file(const File& f) const
                    file_ndx_low == file_info.nFileIndexLow;
         }
     }
-	*/
-
-
-
-    /*
-    FIXME: Here is how to do it on Windows Server 2012 and onwards. This new
-    solution correctly handles file identification on ReFS.
-
-    FILE_ID_INFO file_id_info;
-    if (GetFileInformationByHandleEx(m_handle, FileIdInfo, &file_id_info, sizeof file_id_info)) {
-        ULONGLONG vol_serial_num = file_id_info.VolumeSerialNumber;
-        EXT_FILE_ID_128 file_id     = file_id_info.FileId;
-        if (GetFileInformationByHandleEx(f.m_handle, FileIdInfo, &file_id_info,
-                                         sizeof file_id_info)) {
-            return vol_serial_num == file_id_info.VolumeSerialNumber &&
-                file_id == file_id_info.FileId;
-        }
-    }
-    */
 
     DWORD err = GetLastError(); // Eliminate any risk of clobbering
     std::string msg = get_last_error_msg("GetFileInformationByHandleEx() failed: ", err);
@@ -1103,6 +1085,22 @@ bool File::is_same_file(const File& f) const
     throw std::runtime_error(msg);
 
 #endif
+
+    /*
+    FIXME: Here is how to do it on Windows Server 2012 and onwards. This new
+    solution correctly handles file identification on ReFS.
+
+    FILE_ID_INFO file_id_info;
+    if (GetFileInformationByHandleEx(m_handle, FileIdInfo, &file_id_info, sizeof file_id_info)) {
+        ULONGLONG vol_serial_num = file_id_info.VolumeSerialNumber;
+        EXT_FILE_ID_128 file_id     = file_id_info.FileId;
+        if (GetFileInformationByHandleEx(f.m_handle, FileIdInfo, &file_id_info,
+                                         sizeof file_id_info)) {
+            return vol_serial_num == file_id_info.VolumeSerialNumber &&
+                file_id == file_id_info.FileId;
+        }
+    }
+    */
 }
 
 File::UniqueID File::get_unique_id() const

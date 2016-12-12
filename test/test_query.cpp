@@ -5246,9 +5246,6 @@ TEST(Query_CaseSensitivity)
 
 #if (defined(_WIN32) || defined(__WIN32__) || defined(_WIN64))
 
-#if 0
-
-
 TEST(Query_Unicode2)
 {
     TupleTableType ttt;
@@ -9871,6 +9868,5 @@ TEST(Query_ArrayLeafRelocate)
     }
 }
 
-#endif
 
 #endif // TEST_QUERY
