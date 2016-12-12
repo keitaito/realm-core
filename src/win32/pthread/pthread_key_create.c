@@ -85,8 +85,12 @@ pthread_key_create (pthread_key_t * key, void (PTW32_CDECL *destructor) (void *)
     {
       result = ENOMEM;
     }
+#if REALM_UWP
   else if ((newkey->key = FlsAlloc ()) == TLS_OUT_OF_INDEXES)
-    {
+#else
+  else if ((newkey->key = TlsAlloc ()) == TLS_OUT_OF_INDEXES)
+#endif
+  {
       result = EAGAIN;
 
       free (newkey);

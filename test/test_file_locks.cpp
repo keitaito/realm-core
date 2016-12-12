@@ -64,6 +64,8 @@ using namespace realm::test_util;
 // check-testcase` (or one of its friends) from the command line.
 
 
+#if 0
+
 // The assumption is that if multiple processes try to place an
 // exclusive lock on a file in a non-blocking fashion, then at least
 // one will succeed (assuming that no one else interferes). This test
@@ -173,5 +175,7 @@ TEST(File_NoSpuriousTryLockFailures)
     // Check that there are no cases where no one got the lock
     CHECK_EQUAL(0, results[0]);
 }
+
+#endif
 
 #endif // TEST_FILE_LOCKS

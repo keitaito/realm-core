@@ -159,7 +159,11 @@ pthread_win32_process_detach_np ()
 	  if (sp->detachState == PTHREAD_CREATE_DETACHED)
 	    {
 	      ptw32_threadDestroy (sp->ptHandle);
-	      FlsSetValue (ptw32_selfThreadKey->key, NULL);
+#if REALM_UWP
+          FlsSetValue (ptw32_selfThreadKey->key, NULL);
+#else
+	      TlsSetValue (ptw32_selfThreadKey->key, NULL);
+#endif
 	    }
 	}
 
@@ -244,8 +248,11 @@ pthread_win32_thread_detach_np ()
 	  if (sp->detachState == PTHREAD_CREATE_DETACHED)
 	    {
 	      ptw32_threadDestroy (sp->ptHandle);
-
+#if REALM_UWP
 	      FlsSetValue (ptw32_selfThreadKey->key, NULL);
+#else
+	      FlsSetValue (ptw32_selfThreadKey->key, NULL);
+#endif
 	    }
 	}
     }

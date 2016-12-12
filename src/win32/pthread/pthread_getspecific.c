@@ -75,8 +75,11 @@ pthread_getspecific (pthread_key_t key)
 #if defined(RETAIN_WSALASTERROR)
       int lastWSAerror = WSAGetLastError ();
 #endif
-      ptr = FlsGetValue (key->key);
-
+#if REALM_UWP
+      ptr = FlsGetValue(key->key);
+#else
+      ptr = TlsGetValue(key->key);
+#endif
       SetLastError (lasterror);
 #if defined(RETAIN_WSALASTERROR)
       WSASetLastError (lastWSAerror);

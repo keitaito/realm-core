@@ -239,8 +239,9 @@ void File::open_internal(const std::string& path, AccessMode a, CreateMode c, in
             break;
     }
     DWORD flags_and_attributes = 0;
+	std::wstring ws(path.begin(), path.end());
     HANDLE handle =
-        CreateFile2((LPCWSTR)path.c_str(), desired_access, share_mode, creation_disposition, nullptr);
+        CreateFile2(ws.c_str(), desired_access, share_mode, creation_disposition, nullptr);
     if (handle != INVALID_HANDLE_VALUE) {
         m_handle = handle;
         m_have_lock = false;
