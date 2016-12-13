@@ -518,7 +518,8 @@
       <AdditionalOptions>WS2_32.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Lib>
-      <AdditionalOptions>WS2_32.lib </AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -700,7 +701,8 @@
       <AdditionalOptions>WS2_32.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Lib>
-      <AdditionalOptions>WS2_32.lib </AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
