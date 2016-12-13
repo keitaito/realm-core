@@ -209,6 +209,10 @@
 #define REALM_ANDROID 0
 #endif
 
+#ifndef REALM_UWP
+#define REALM_UWP 0
+#endif
+
 // Some documentation of the defines provided by Apple:
 // http://developer.apple.com/library/mac/documentation/Porting/Conceptual/PortingUnix/compiling/compiling.html#//apple_ref/doc/uid/TP40002850-SW13
 #if defined __APPLE__ && defined __MACH__
