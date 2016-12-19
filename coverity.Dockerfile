@@ -19,6 +19,7 @@ RUN cd /opt \
     && wget https://scan.coverity.com/download/linux64 --post-data "token=${TOKEN}&project=realm%2Frealm-core" -O coverity_tool.tgz \
     && tar zxf coverity_tool.tgz \
     && rm coverity_tool.tgz \
-    && mv cov-analysis-linux64-* cov-analysis-linux64
+    && mv cov-analysis-linux64-* cov-analysis-linux64 \
+    && chmod -R a+w cov-analysis-linux64
 
 ENV PATH "$PATH:/opt/cov-analysis-linux64/bin"
